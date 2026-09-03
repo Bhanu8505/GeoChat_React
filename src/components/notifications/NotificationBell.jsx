@@ -1,23 +1,29 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import notificationService from "../../services/notificationService";
+import useNotification from "../../context/useNotification";
+import useAuth from "../../context/useAuth";
 
 const NotificationBell = () => {
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  const loadUnreadCount = async () => {
-    try {
-      const response = await notificationService.getUnreadNotificationsCount();
-
-      setUnreadCount(response.data);
-    } catch (error) {
-      console.error("Failed to get unread count:", error);
-    }
-  };
+  const { accessToken } = useAuth();
+  const { unreadCount, setUnreadCount } = useNotification();
 
   useEffect(() => {
-    loadUnreadCount();
-  }, []);
+    const loadUnreadCount = async () => {
+      try {
+        const response =
+          await notificationService.getUnreadNotificationsCount();
+
+        setUnreadCount(response.data);
+      } catch (error) {
+        console.error("Failed to get unread count:", error);
+      }
+    };
+
+    if (accessToken) {
+      loadUnreadCount();
+    }
+  }, [accessToken]);
 
   return (
     <Link to="/notifications" className="relative">

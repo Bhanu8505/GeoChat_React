@@ -2,12 +2,16 @@ import { createContext, useEffect, useState } from "react";
 import userService from "../services/userService";
 import authService from "../services/authService";
 import { useNavigate } from "react-router-dom";
+import websocketService from "../services/webSocketService";
 
 export const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
   const [authUser, setAuthUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [accessToken, setAccessToken] = useState(
+    localStorage.getItem("accessToken"),
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -18,6 +22,18 @@ const AuthProvider = ({ children }) => {
     }
 
     checkAuth();
+  }, []);
+
+  useEffect(() => {
+    const handleTokenUpdate = (event) => {
+      setAccessToken(event.detail);
+    };
+
+    window.addEventListener("accessTokenUpdated", handleTokenUpdate);
+
+    return () => {
+      window.removeEventListener("accessTokenUpdated", handleTokenUpdate);
+    };
   }, []);
 
   const register = async (data) => {
@@ -42,6 +58,7 @@ const AuthProvider = ({ children }) => {
       console.log("Login Request Response : ", res.data);
       const accessToken = res.data.accessToken;
       localStorage.setItem("accessToken", accessToken);
+      setAccessToken(accessToken);
 
       await checkAuth();
 
@@ -79,6 +96,10 @@ const AuthProvider = ({ children }) => {
       const res = await authService.refreshToken();
       console.log("Refresh Token Request Sent");
       console.log("Res in Refresh Token Request : ", res.data);
+      const newAccessToken = res.data.accessToken;
+
+      localStorage.setItem("accessToken", newAccessToken);
+      setAccessToken(newAccessToken);
       return {
         success: true,
         data: res.data,
@@ -102,7 +123,9 @@ const AuthProvider = ({ children }) => {
     } catch (error) {
       console.log("Error on logout : ", error);
     } finally {
+      await websocketService.disconnect();
       localStorage.removeItem("accessToken");
+      setAccessToken(null);
       setAuthUser(null);
     }
   };
@@ -189,6 +212,7 @@ const AuthProvider = ({ children }) => {
       value={{
         authUser,
         authLoading,
+        accessToken,
         register,
         login,
         checkAuth,

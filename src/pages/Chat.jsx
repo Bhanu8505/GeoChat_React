@@ -15,7 +15,7 @@ const Chat = () => {
   const [loading, setLoading] = useState(true);
 
   const handleSend = async () => {
-    if (!messageText.trim()) {
+    if (!conversationId || !messageText.trim()) {
       return;
     }
 
@@ -33,50 +33,60 @@ const Chat = () => {
     }
   };
 
+  // Subscribe to the selected conversation
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-
-    if (!token) {
-      console.log("No access token found");
+    if (!conversationId) {
       return;
     }
 
-    websocketService.connect(
-      token,
-      () => {
-        console.log("Connected to chat WebSocket FROM CHAT.JSX");
+    let subscription;
+    let cancelled = false;
 
-        websocketService.subscribe(
+    const subscribeToConversation = async () => {
+      try {
+        subscription = await websocketService.subscribe(
           `/topic/conversations/${conversationId}`,
           (message) => {
+            if (cancelled) return;
+
             console.log("Realtime message:", message);
 
             setMessages((prevMessages) => [...prevMessages, message]);
           },
         );
-      },
-      (error) => {
-        console.error("WebSocket connection error FROM CHAT.JSX:", error);
-      },
-    );
+      } catch (error) {
+        console.error("Failed to subscribe to conversation:", error);
+      }
+    };
+    subscribeToConversation();
 
     return () => {
-      websocketService.disconnect();
+      cancelled = true;
+      subscription?.unsubscribe();
     };
   }, [conversationId]);
 
+  // Load existing messages
   useEffect(() => {
+    if (!conversationId) {
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
+
     const loadMessages = async () => {
+      setLoading(true);
+
       try {
         const res =
           await chatService.getAllMessagesInAConversation(conversationId);
 
-        console.log("Message response: ", res.data);
+        console.log("Message response:", res.data);
 
         setMessages(res.data.messages);
       } catch (error) {
         console.log(
-          "Error getting messages: ",
+          "Error getting messages:",
           error?.response?.data || error.message,
         );
       } finally {
@@ -87,6 +97,7 @@ const Chat = () => {
     loadMessages();
   }, [conversationId]);
 
+  // Scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -170,6 +181,7 @@ const Chat = () => {
         <div className="flex flex-1 items-center justify-center p-4">
           <div className="text-center text-gray-400">
             <p className="text-lg font-medium">Select a conversation</p>
+
             <p className="mt-1 text-sm">
               Choose a conversation from the sidebar to start chatting
             </p>

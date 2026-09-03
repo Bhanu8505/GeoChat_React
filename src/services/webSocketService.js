@@ -1,47 +1,86 @@
 import { Client } from "@stomp/stompjs";
 
 let client = null;
+let connectionPromise = null;
 
 const websocketService = {
   connect: (token, onConnected, onError) => {
-    client = new Client({
-      webSocketFactory: () =>
-        new WebSocket(
-          `ws://localhost:9010/api/v1/chat/ws?token=${encodeURIComponent(token)}`,
-        ),
-
-      reconnectDelay: 0,
-
-      onConnect: () => {
-        console.log("STOMP CONNECTED");
-
-        onConnected?.();
-      },
-
-      onStompError: (frame) => {
-        console.error("STOMP ERROR:", frame.headers, frame.body);
-      },
-
-      onWebSocketError: (error) => {
-        console.error("WEBSOCKET ERROR:", error);
-        onError?.(error);
-      },
-
-      onWebSocketClose: (event) => {
-        console.log("WEBSOCKET CLOSED");
-        console.log("code:", event.code);
-        console.log("reason:", event.reason);
-      },
-    });
-
-    client.activate();
-  },
-
-  subscribe: (destination, callback) => {
-    if (!client?.connected) {
-      console.log("Cannot subscribe: WebSocket not connected");
+    // Already connected
+    if (client?.connected) {
+      onConnected?.();
       return;
     }
+
+    // Connection already in progress
+    if (connectionPromise) {
+      connectionPromise.then(() => {
+        onConnected?.();
+      });
+      return;
+    }
+
+    connectionPromise = new Promise((resolve, reject) => {
+      client = new Client({
+        webSocketFactory: () =>
+          new WebSocket(
+            `ws://localhost:9010/api/v1/chat/ws?token=${encodeURIComponent(
+              token,
+            )}`,
+          ),
+
+        reconnectDelay: 0,
+
+        onConnect: () => {
+          console.log("STOMP CONNECTED");
+
+          resolve();
+          onConnected?.();
+        },
+
+        onStompError: (frame) => {
+          console.error("STOMP ERROR:", frame.headers, frame.body);
+
+          connectionPromise = null;
+          reject(frame);
+        },
+
+        onWebSocketError: (error) => {
+          console.error("WEBSOCKET ERROR:", error);
+
+          connectionPromise = null;
+          reject(error);
+
+          onError?.(error);
+        },
+
+        onWebSocketClose: (event) => {
+          console.log("WEBSOCKET CLOSED");
+          console.log("code:", event.code);
+          console.log("reason:", event.reason);
+
+          connectionPromise = null;
+        },
+      });
+
+      client.activate();
+    });
+  },
+
+  waitForConnection: async () => {
+    if (client?.connected) {
+      return;
+    }
+
+    if (connectionPromise) {
+      await connectionPromise;
+      return;
+    }
+
+    throw new Error("WebSocket is not connected");
+  },
+
+  subscribe: async (destination, callback) => {
+    await websocketService.waitForConnection();
 
     return client.subscribe(destination, (frame) => {
       console.log("Received:", frame.body);
@@ -49,13 +88,21 @@ const websocketService = {
       callback(JSON.parse(frame.body));
     });
   },
-  disconnect: () => {
+
+  disconnect: async () => {
     if (client) {
       client.deactivate();
       client = null;
+      connectionPromise = null;
     }
   },
+
   sendMessage: (destination, body) => {
+    if (!client?.connected) {
+      console.error("Cannot send message: WebSocket not connected");
+      return;
+    }
+
     client.publish({
       destination,
       body: JSON.stringify(body),

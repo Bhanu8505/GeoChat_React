@@ -3,7 +3,7 @@ import api from "../utils/api.js";
 const userService = {
   myProfile: () => {
     return api.get("/users/me", {
-      skipRefresh: true,
+      // skipRefresh: true,
     });
   },
 

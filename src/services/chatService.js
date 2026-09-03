@@ -30,6 +30,10 @@ const chatService = {
       `/chat/conversations/${conversationId}/getallmessagesinchat`,
     );
   },
+
+  getUserPresence: (userId) => {
+    return api.get(`/chat/presence/${userId}`);
+  },
 };
 
 export default chatService;

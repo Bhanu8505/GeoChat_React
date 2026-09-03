@@ -36,8 +36,11 @@ api.interceptors.response.use(
 
     const originalRequest = error.config;
 
-    console.log("Status:", error.response?.status);
-    console.log("URL:", originalRequest?.url);
+    console.log("401 CHECK");
+    console.log("status:", error.response?.status);
+    console.log("_retry:", originalRequest?._retry);
+    console.log("url:", originalRequest?.url);
+    console.log("skipRefresh:", originalRequest?.skipRefresh);
     console.log("Error :", error);
 
     if (
@@ -58,6 +61,12 @@ api.interceptors.response.use(
         const newAccessToken = response.data.accessToken;
 
         localStorage.setItem("accessToken", newAccessToken);
+
+        window.dispatchEvent(
+          new CustomEvent("accessTokenUpdated", {
+            detail: newAccessToken,
+          }),
+        );
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
