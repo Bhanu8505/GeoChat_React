@@ -25,7 +25,13 @@ const Navbar = () => {
           Home
         </Link>
         <span className="text-sm font-medium text-gray-700">
-          {authUser?.fullName || authUser?.email}
+          <Link
+            to="/profile"
+            className="font-medium text-gray-600 transition hover:text-blue-600"
+          >
+            My Profile
+          </Link>
+          {/* {authUser?.fullName || authUser?.email} */}
         </span>
         <Link className="transition hover:text-blue-600" to="/chat">
           Chats

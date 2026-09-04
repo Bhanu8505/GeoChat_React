@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
 import notificationService from "../services/notificationService";
 import NotificationItem from "../components/notifications/NotificationItem";
+import { useNavigate } from "react-router-dom";
+import useNotification from "../context/useNotification";
 
 const Notifications = () => {
-  const [notifications, setNotifications] = useState([]);
+  const navigate = useNavigate();
+
+  const { notifications, setNotifications, setUnreadCount } = useNotification();
+
+  // const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadNotifications = async () => {
@@ -24,8 +30,34 @@ const Notifications = () => {
     loadNotifications();
   }, []);
 
+  const handleNotificationClick = async (notification) => {
+    console.log("Clicked notification:", notification);
+
+    if (!notification.read) {
+      await handleRead(notification.id);
+    }
+
+    // Navigate based on notification type
+    if (
+      notification.notificationType === "NEW_MESSAGE" &&
+      notification.referenceType === "CONVERSATION"
+    ) {
+      console.log("Navigating to:", `/chat/${notification.referenceId}`);
+
+      navigate(`/chat/${notification.referenceId}`);
+    }
+  };
+
   const handleRead = async (notificationId) => {
     try {
+      const notification = notifications.find(
+        (notification) => notification.id === notificationId,
+      );
+
+      if (!notification || notification.read) {
+        return;
+      }
+
       await notificationService.readNotificationById(notificationId);
 
       setNotifications((prev) =>
@@ -35,6 +67,7 @@ const Notifications = () => {
             : notification,
         ),
       );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
     }
@@ -42,7 +75,7 @@ const Notifications = () => {
 
   const handleMarkAllRead = async () => {
     try {
-      await notificationService.markAllAsRead();
+      await notificationService.readAllNotifications();
 
       setNotifications((prev) =>
         prev.map((notification) => ({
@@ -50,6 +83,7 @@ const Notifications = () => {
           read: true,
         })),
       );
+      setUnreadCount(0);
     } catch (error) {
       console.error("Failed to mark all notifications as read:", error);
     }
@@ -57,11 +91,19 @@ const Notifications = () => {
 
   const handleDelete = async (notificationId) => {
     try {
+      const notification = notifications.find(
+        (notification) => notification.id === notificationId,
+      );
+
       await notificationService.deleteNotificationById(notificationId);
 
       setNotifications((prev) =>
         prev.filter((notification) => notification.id !== notificationId),
       );
+
+      if (notification && !notification.read) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
     } catch (error) {
       console.error("Failed to delete notification:", error);
     }
@@ -93,6 +135,7 @@ const Notifications = () => {
               notification={notification}
               onRead={handleRead}
               onDelete={handleDelete}
+              onClick={handleNotificationClick}
             />
           ))}
         </div>

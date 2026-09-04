@@ -1,23 +1,24 @@
 import { useNavigate } from "react-router-dom";
 
-const NotificationItem = ({ notification, onRead, onDelete }) => {
-  const navigate = useNavigate();
+const NotificationItem = ({ notification, onRead, onDelete, onClick }) => {
+  // const navigate = useNavigate();
 
-  const handleClick = async () => {
-    if (!notification.read) {
-      await onRead(notification.id);
-    }
-  };
+  // const handleClick = async () => {
+  //   if (!notification.read) {
+  //     await onRead(notification.id);
+  //   }
+  //   onClick(notification);
+  // };
 
-  if (notification.type === "MESSAGE") {
-    navigate(`/chat/${notification.conversationId}`);
-  }
+  // if (notification.type === "MESSAGE") {
+  //   navigate(`/chat/${notification.conversationId}`);
+  // }
 
   return (
     <div
-      onClick={handleClick}
+      onClick={() => onClick(notification)}
       className={`p-4 border-b cursor-pointer ${
-        notification.read ? "bg-white" : "bg-blue-50"
+        notification.read ? "bg-white" : "bg-gray-300"
       }`}
     >
       <div className="flex justify-between">
