@@ -1,9 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../context/useAuth";
 import NotificationBell from "./notifications/NotificationBell";
+import useNotification from "../context/useNotification";
 
 const Navbar = () => {
   const { authUser, logout } = useAuth();
+  const { pendingChatRequests } = useNotification();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -33,6 +35,17 @@ const Navbar = () => {
           </Link>
           {/* {authUser?.fullName || authUser?.email} */}
         </span>
+        <Link
+          to="/nearby-chat-requests"
+          className="relative transition hover:text-blue-600"
+        >
+          Chat Requests
+          {pendingChatRequests.length > 0 && (
+            <span className="absolute -top-3 -right-3 bg-red-500 text-white text-xs rounded-full px-2 py-1">
+              {pendingChatRequests.length}
+            </span>
+          )}
+        </Link>
         <Link className="transition hover:text-blue-600" to="/chat">
           Chats
         </Link>

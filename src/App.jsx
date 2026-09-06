@@ -10,6 +10,7 @@ import Chat from "./pages/Chat";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/ProfilePage";
 import EditProfile from "./pages/EditProfile";
+import NearbyChatRequests from "./pages/NearbyChatRequests";
 
 function App() {
   return (
@@ -31,6 +32,10 @@ function App() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
+          <Route
+            path="/nearby-chat-requests"
+            element={<NearbyChatRequests />}
+          />
         </Route>
       </Routes>
     </BrowserRouter>
