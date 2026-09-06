@@ -1,6 +1,19 @@
 import api from "../utils/api";
 
 const chatService = {
+  nearbyChatRequest: (data) => {
+    return api.post("/chat/conversations/nearby-chat/request", data);
+  },
+  nearbyChatRequestAccept: (requestId) => {
+    return api.patch(`/chat/conversations/nearby-chat/${requestId}/accept`);
+  },
+  nearbyChatRequestReject: (requestId) => {
+    return api.patch(`/chat/conversations/nearby-chat/${requestId}/reject`);
+  },
+  nearbyChatPendingRequest: () => {
+    return api.get("/chat/conversations/near-by/chat/request/pending");
+  },
+
   createConversation: (data) => {
     return api.post("/chat/conversations/createchat", data);
   },

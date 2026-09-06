@@ -2,12 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import chatService from "../services/chatService";
 import useAuth from "../context/useAuth";
-import presenceService from "../services/presenceService";
 import usePresence from "../context/usePresence";
 
 const ConversationSidebar = () => {
   const { authUser } = useAuth();
-  // const [onlineUsers, setOnlineUsers] = useState(new Set());
   const { onlineUsers } = usePresence();
 
   console.log("Auth User : ", authUser);
@@ -62,7 +60,9 @@ const ConversationSidebar = () => {
         <div className="h-9 w-9 rounded-full bg-gray-300"></div>
 
         <div>
-          <div className="font-medium">{authUser?.username}</div>
+          <div className="font-medium">
+            {authUser?.username || authUser.fullName}
+          </div>
 
           <div className="flex items-center gap-1.5 text-xs text-green-500">
             <span className="h-2 w-2 rounded-full bg-green-500"></span>

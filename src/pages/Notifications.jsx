@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import notificationService from "../services/notificationService";
+import chatService from "../services/chatService";
 import NotificationItem from "../components/notifications/NotificationItem";
 import { useNavigate } from "react-router-dom";
 import useNotification from "../context/useNotification";
@@ -7,28 +7,16 @@ import useNotification from "../context/useNotification";
 const Notifications = () => {
   const navigate = useNavigate();
 
-  const { notifications, setNotifications, setUnreadCount } = useNotification();
+  const {
+    notifications,
+    setNotifications,
+    setUnreadCount,
+    loading,
+    pendingChatRequests,
+    setPendingChatRequests,
+  } = useNotification();
 
-  // const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadNotifications = async () => {
-    try {
-      const response = await notificationService.getAllNotifications();
-
-      console.log("Notifications from backend:", response.data);
-
-      setNotifications(response.data.allNotificationsResponseList);
-    } catch (error) {
-      console.error("Failed to load notifications:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadNotifications();
-  }, []);
+  console.log("Pending Chat Requests : ", pendingChatRequests);
 
   const handleNotificationClick = async (notification) => {
     console.log("Clicked notification:", notification);
@@ -38,6 +26,19 @@ const Notifications = () => {
     }
 
     // Navigate based on notification type
+    if (
+      notification.notificationType === "NEW_CHAT_REQUEST" &&
+      notification.referenceType === "REQUEST"
+    ) {
+      navigate("/nearby-chat-requests");
+    }
+    if (
+      notification.notificationType === "CONVERSATION_CREATED" &&
+      notification.referenceType === "CONVERSATION"
+    ) {
+      navigate(`/chat/${notification.referenceId}`);
+    }
+
     if (
       notification.notificationType === "NEW_MESSAGE" &&
       notification.referenceType === "CONVERSATION"
@@ -109,6 +110,49 @@ const Notifications = () => {
     }
   };
 
+  const handleAccept = async (notification) => {
+    try {
+      const response = await chatService.nearbyChatRequestAccept(
+        notification.referenceId,
+      );
+      await notificationService.readNotificationById(notification.id);
+      console.log("Chat Accept response:", response.data);
+
+      setPendingChatRequests((prev) =>
+        prev.filter((request) => request.id !== notification.referenceId),
+      );
+
+      if (!notification.read) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+
+      // Navigate to created conversation
+      navigate(`/chat/${response.data.conversationId}`);
+    } catch (error) {
+      console.error("Failed to accept chat request:", error);
+    }
+  };
+
+  const handleReject = async (notification) => {
+    try {
+      const response = await chatService.nearbyChatRequestReject(
+        notification.referenceId,
+      );
+      await notificationService.readNotificationById(notification.id);
+      console.log("Chat Reject response:", response.data);
+
+      setPendingChatRequests((prev) =>
+        prev.filter((request) => request.id !== notification.referenceId),
+      );
+
+      if (!notification.read) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error("Failed to reject chat request:", error);
+    }
+  };
+
   if (loading) {
     return <div>Loading notifications...</div>;
   }
@@ -136,6 +180,9 @@ const Notifications = () => {
               onRead={handleRead}
               onDelete={handleDelete}
               onClick={handleNotificationClick}
+              onAccept={handleAccept}
+              onReject={handleReject}
+              pendingChatRequests={pendingChatRequests}
             />
           ))}
         </div>

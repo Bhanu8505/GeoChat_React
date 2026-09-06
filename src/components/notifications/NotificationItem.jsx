@@ -1,18 +1,18 @@
-import { useNavigate } from "react-router-dom";
-
-const NotificationItem = ({ notification, onRead, onDelete, onClick }) => {
-  // const navigate = useNavigate();
-
-  // const handleClick = async () => {
-  //   if (!notification.read) {
-  //     await onRead(notification.id);
-  //   }
-  //   onClick(notification);
-  // };
-
-  // if (notification.type === "MESSAGE") {
-  //   navigate(`/chat/${notification.conversationId}`);
-  // }
+const NotificationItem = ({
+  notification,
+  onRead,
+  onDelete,
+  onClick,
+  onAccept,
+  onReject,
+  pendingChatRequests,
+}) => {
+  const isPendingChatRequest =
+    notification.notificationType === "NEW_CHAT_REQUEST" &&
+    notification.referenceType === "REQUEST" &&
+    pendingChatRequests.some(
+      (request) => request.id === notification.referenceId,
+    );
 
   return (
     <div
@@ -26,6 +26,29 @@ const NotificationItem = ({ notification, onRead, onDelete, onClick }) => {
           <h3 className="font-semibold">{notification.title}</h3>
 
           <p className="text-gray-600">{notification.message}</p>
+          {isPendingChatRequest && (
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onAccept(notification);
+                }}
+                className="bg-green-600 text-white px-3 py-1 rounded"
+              >
+                Accept
+              </button>
+
+              <button
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onReject(notification);
+                }}
+                className="bg-red-600 text-white px-3 py-1 rounded"
+              >
+                Reject
+              </button>
+            </div>
+          )}
         </div>
 
         <button

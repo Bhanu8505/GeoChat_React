@@ -44,7 +44,7 @@ const Profile = () => {
       {/* Profile Card */}
       <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
         {/* Cover */}
-        <div className="h-32 bg-gradient-to-r from-blue-500 to-indigo-600" />
+        <div className="h-32 bg-linear-to-r from-blue-500 to-indigo-600" />
 
         {/* Profile Header */}
         <div className="px-6 pb-6">

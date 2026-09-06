@@ -2,32 +2,61 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { Client } from "@stomp/stompjs";
 import useAuth from "./useAuth";
 import notificationService from "../services/notificationService";
+import chatService from "../services/chatService";
 
 export const NotificationContext = createContext();
 
 const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
+  const [pendingChatRequests, setPendingChatRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const { accessToken } = useAuth();
 
   useEffect(() => {
     if (!accessToken) {
       setUnreadCount(0);
+      setNotifications([]);
+      setPendingChatRequests([]);
+      setLoading(false);
       return;
     }
 
-    const loadUnreadCount = async () => {
+    const loadData = async () => {
       try {
-        const response =
+        setLoading(true);
+        const unreadResponse =
           await notificationService.getUnreadNotificationsCount();
 
-        setUnreadCount(response.data);
+        const notificationsResponse =
+          await notificationService.getAllNotifications();
+
+        setUnreadCount(unreadResponse.data);
+        setNotifications(
+          notificationsResponse.data.allNotificationsResponseList,
+        );
       } catch (error) {
-        console.error("Failed to get unread count:", error);
+        console.error("Failed to load notifications:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    loadUnreadCount();
+    const loadPendingChatRequests = async () => {
+      try {
+        const pendingChatRequestsResponse =
+          await chatService.nearbyChatPendingRequest();
+
+        setPendingChatRequests(
+          pendingChatRequestsResponse.data.responseDtoList,
+        );
+      } catch (error) {
+        console.error("Failed to load pending chat requests:", error);
+      }
+    };
+
+    loadData();
+    loadPendingChatRequests();
 
     const client = new Client({
       webSocketFactory: () =>
@@ -49,6 +78,13 @@ const NotificationProvider = ({ children }) => {
 
           setNotifications((prev) => [notification, ...prev]);
           setUnreadCount((prev) => prev + 1);
+
+          if (
+            notification.notificationType === "NEW_CHAT_REQUEST" &&
+            notification.referenceType === "REQUEST"
+          ) {
+            loadPendingChatRequests();
+          }
         });
       },
 
@@ -80,6 +116,8 @@ const NotificationProvider = ({ children }) => {
         unreadCount,
         setNotifications,
         setUnreadCount,
+        pendingChatRequests,
+        setPendingChatRequests,
       }}
     >
       {children}

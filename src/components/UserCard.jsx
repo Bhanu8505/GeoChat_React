@@ -6,20 +6,17 @@ const UserCard = ({ user }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const openChat = async () => {
+  const chatRequest = async () => {
     try {
       setLoading(true);
 
-      const res = await chatService.createNearbyChat({
-        userId: user.userId,
+      const res = await chatService.nearbyChatRequest({
+        receiverId: user.userId,
       });
-      console.log("Create conversation response: ", res.data);
-
-      const conversationId = res.data.conversationId;
-      navigate(`/chat/${conversationId}`);
+      console.log("Chat Request response: ", res.data);
     } catch (error) {
       console.log(
-        "Error creating conversation: ",
+        "Error sending chat request: ",
         error?.response?.data || error.message,
       );
     } finally {
@@ -66,7 +63,7 @@ const UserCard = ({ user }) => {
 
       {/* Chat button */}
       <button
-        onClick={openChat}
+        onClick={chatRequest}
         disabled={loading}
         className="mt-5 w-full rounded-lg bg-blue-600 py-2.5 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
       >
