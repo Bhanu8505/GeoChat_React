@@ -87,7 +87,7 @@ const Chat = () => {
       } catch (error) {
         console.log(
           "Error getting messages:",
-          error?.response?.data || error.message,
+          error?.response?.data?.apiError?.message || error?.message,
         );
       } finally {
         setLoading(false);

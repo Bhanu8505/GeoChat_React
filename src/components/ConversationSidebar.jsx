@@ -25,23 +25,14 @@ const ConversationSidebar = () => {
 
         setConversations(response.data.userConversations);
       } catch (error) {
-        console.error("Failed to load conversations:", error);
+        console.error(
+          "Failed to load conversations:",
+          error.response?.data?.apiError?.message,
+        );
       } finally {
         setLoading(false);
       }
     };
-    // const loadOnlineUsers = async () => {
-    //   console.log("Loading online users...");
-    //   try {
-    //     const response = await presenceService.getOnlineUsers();
-    //     console.log("Online presence response : ", response.data);
-    //     setOnlineUsers(new Set(response.data));
-    //   } catch (error) {
-    //     console.error("Failed to load online users:", error);
-    //   }
-    // };
-
-    // loadOnlineUsers();
 
     loadConversations();
   }, []);

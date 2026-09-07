@@ -31,12 +31,15 @@ const NotificationProvider = ({ children }) => {
         const notificationsResponse =
           await notificationService.getAllNotifications();
 
-        setUnreadCount(unreadResponse.data);
+        setUnreadCount(unreadResponse.data.data);
         setNotifications(
-          notificationsResponse.data.allNotificationsResponseList,
+          notificationsResponse.data.data.allNotificationsResponseList,
         );
       } catch (error) {
-        console.error("Failed to load notifications:", error);
+        console.error(
+          "Failed to load notifications:",
+          error.response?.data?.apiError?.message,
+        );
       } finally {
         setLoading(false);
       }
@@ -51,7 +54,10 @@ const NotificationProvider = ({ children }) => {
           pendingChatRequestsResponse.data.responseDtoList,
         );
       } catch (error) {
-        console.error("Failed to load pending chat requests:", error);
+        console.error(
+          "Failed to load pending chat requests:",
+          error.response?.data?.apiError?.message,
+        );
       }
     };
 

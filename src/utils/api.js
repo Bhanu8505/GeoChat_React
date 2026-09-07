@@ -56,9 +56,9 @@ api.interceptors.response.use(
         console.log("Calling refresh token...");
         const response = await api.post("/auth/refreshtoken");
 
-        console.log("Refresh response:", response.data);
+        console.log("Refresh response:", response.data.data);
 
-        const newAccessToken = response.data.accessToken;
+        const newAccessToken = response.data.data.accessToken;
 
         localStorage.setItem("accessToken", newAccessToken);
 

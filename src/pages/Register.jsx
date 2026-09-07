@@ -23,7 +23,7 @@ const Register = () => {
     e.preventDefault();
 
     const res = await register(formData);
-    console.log("Register Result : ", res);
+    console.log("Register Result : ", res.data);
 
     if (res.success) {
       navigate("/login");

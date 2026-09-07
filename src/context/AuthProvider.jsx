@@ -43,10 +43,13 @@ const AuthProvider = ({ children }) => {
         success: true,
       };
     } catch (error) {
-      console.log("Error Signing up", error.data?.message || error.message);
+      console.log(
+        "Error Signing up",
+        error.response?.data?.apiError?.message || error.message,
+      );
       return {
         success: false,
-        message: error?.data?.message || "Error Signing up",
+        message: error?.response?.data?.apiError?.message || "Error Signing up",
       };
     }
   };
@@ -55,8 +58,8 @@ const AuthProvider = ({ children }) => {
     try {
       const res = await authService.login(data);
       console.log("Login Request Sent ");
-      console.log("Login Request Response : ", res.data);
-      const accessToken = res.data.accessToken;
+      console.log("Login Request Response : ", res.data.data);
+      const accessToken = res.data.data.accessToken;
       localStorage.setItem("accessToken", accessToken);
       setAccessToken(accessToken);
 
@@ -68,11 +71,12 @@ const AuthProvider = ({ children }) => {
     } catch (error) {
       console.log(
         "error while logging in : ",
-        error.data?.message || error.message,
+        error.response?.data?.apiError?.message || error.message,
       );
       return {
         success: false,
-        message: error?.data?.message || "Something went wrong",
+        message:
+          error?.response?.data?.apiError?.message || "Something went wrong",
       };
     }
   };
@@ -80,10 +84,13 @@ const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       const res = await userService.myProfile();
-      setAuthUser(res.data);
+      setAuthUser(res.data.data);
       console.log("Check Auth res : ", res);
     } catch (error) {
-      console.log("error checking Auth user : ", error?.data || error.message);
+      console.log(
+        "error checking Auth user : ",
+        error.response?.data?.apiError?.message || error.message,
+      );
 
       setAuthUser(null);
     } finally {
@@ -95,14 +102,14 @@ const AuthProvider = ({ children }) => {
     try {
       const res = await authService.refreshToken();
       console.log("Refresh Token Request Sent");
-      console.log("Res in Refresh Token Request : ", res.data);
-      const newAccessToken = res.data.accessToken;
+      console.log("Res in Refresh Token Request : ", res.data.data);
+      const newAccessToken = res.data.data.accessToken;
 
       localStorage.setItem("accessToken", newAccessToken);
       setAccessToken(newAccessToken);
       return {
         success: true,
-        data: res.data,
+        data: res.data.data,
       };
     } catch (error) {
       console.log("Error updating refresh token");

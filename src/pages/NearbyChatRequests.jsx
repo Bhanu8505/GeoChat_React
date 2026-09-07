@@ -17,7 +17,10 @@ const NearbyChatRequests = () => {
 
       navigate(`/chat/${response.data.conversationId}`);
     } catch (error) {
-      console.error("Failed to accept chat request:", error);
+      console.error(
+        "Failed to accept chat request:",
+        error.response?.data?.apiError?.message,
+      );
     }
   };
 
@@ -29,7 +32,10 @@ const NearbyChatRequests = () => {
         prev.filter((item) => item.id !== request.id),
       );
     } catch (error) {
-      console.error("Failed to reject chat request:", error);
+      console.error(
+        "Failed to reject chat request:",
+        error.response?.data?.apiError?.message,
+      );
     }
   };
 

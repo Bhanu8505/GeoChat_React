@@ -21,7 +21,7 @@ const EditProfile = () => {
       try {
         const response = await userService.myProfile();
 
-        const profile = response.data;
+        const profile = response.data.data;
 
         setFormData({
           username: profile.username || "",
@@ -30,7 +30,10 @@ const EditProfile = () => {
           profilePictureUrl: profile.profilePictureUrl || "",
         });
       } catch (error) {
-        console.error("Failed to load profile:", error);
+        console.error(
+          "Failed to load profile:",
+          error.response?.data?.apiError?.message,
+        );
         setError("Failed to load profile");
       } finally {
         setLoading(false);
@@ -60,9 +63,14 @@ const EditProfile = () => {
 
       navigate("/profile");
     } catch (error) {
-      console.error("Failed to update profile:", error);
+      console.error(
+        "Failed to update profile:",
+        error.response?.data?.apiError?.message,
+      );
 
-      setError(error.response?.data?.message || "Failed to update profile");
+      setError(
+        error.response?.data?.apiError?.message || "Failed to update profile",
+      );
     } finally {
       setSaving(false);
     }

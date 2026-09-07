@@ -13,7 +13,7 @@ const Login = () => {
     e.preventDefault();
 
     const res = await login({ email, password });
-    console.log("Login Result", res);
+    console.log("Login Result", res.data);
 
     if (res.success) {
       navigate("/home");

@@ -3,17 +3,7 @@ import userService from "../services/userService";
 import UserCard from "../components/UserCard";
 
 const Home = () => {
-  // const [location, setLocation] = useState(() => {
-  //   const savedLocation = localStorage.getItem("location");
-  //   return savedLocation ? JSON.parse(savedLocation) : null;
-  // });
-
   const [location, setLocation] = useState(null);
-
-  // const [nearbyUsers, setNearbyUsers] = useState(() => {
-  //   const savedUsers = localStorage.getItem("nearbyUsers");
-  //   return savedUsers ? JSON.parse(savedUsers) : [];
-  // });
 
   const [nearbyUsers, setNearbyUsers] = useState([]);
 
@@ -29,7 +19,7 @@ const Home = () => {
         };
 
         setLocation(newLocation);
-        // localStorage.setItem("location", JSON.stringify(newLocation));
+
         console.log("Latitude: ", latitude);
         console.log("Longitude: ", longitude);
 
@@ -39,7 +29,7 @@ const Home = () => {
             longitude,
           });
 
-          console.log("Location update Response: ", res.data);
+          console.log("Location update Response: ", res);
 
           const nearbyRes = await userService.getNearbyUsers({
             latitude,
@@ -47,15 +37,14 @@ const Home = () => {
             radius: 1000,
           });
 
-          console.log("Nearby users: ", nearbyRes.data);
+          console.log("Nearby users: ", nearbyRes.data.data);
 
-          const users = nearbyRes.data.nearbyUsers;
+          const users = nearbyRes.data.data.nearbyUsers;
           setNearbyUsers(users);
-          // localStorage.setItem("nearbyUsers", JSON.stringify(users));
         } catch (error) {
           console.log(
             "Error updating location: ",
-            error?.response?.data || error.message,
+            error.response?.data?.apiError?.message || error.message,
           );
         }
       },

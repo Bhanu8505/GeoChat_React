@@ -12,9 +12,12 @@ const Profile = () => {
     const loadProfile = async () => {
       try {
         const response = await userService.myProfile();
-        setProfile(response.data);
+        setProfile(response.data.data);
       } catch (error) {
-        console.error("Failed to load profile:", error);
+        console.error(
+          "Failed to load profile:",
+          error.response?.data?.apiError?.message,
+        );
       } finally {
         setLoading(false);
       }

@@ -17,7 +17,7 @@ const UserCard = ({ user }) => {
     } catch (error) {
       console.log(
         "Error sending chat request: ",
-        error?.response?.data || error.message,
+        error.response?.data?.apiError?.message || error.message,
       );
     } finally {
       setLoading(false);
