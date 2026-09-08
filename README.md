@@ -395,7 +395,7 @@ Make sure you have:
 ## 1. Clone the Repository
 
 ```bash
-git clone <frontend-repository-url>
+git clone https://github.com/Bhanu8505/GeoChat_React.git
 cd GeoChat-Frontend
 ```
 
