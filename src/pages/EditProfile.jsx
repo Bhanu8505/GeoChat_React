@@ -14,7 +14,7 @@ const EditProfile = () => {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState(null);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -30,11 +30,12 @@ const EditProfile = () => {
           profilePictureUrl: profile.profilePictureUrl || "",
         });
       } catch (error) {
-        console.error(
-          "Failed to load profile:",
-          error.response?.data?.apiError?.message,
-        );
-        setError("Failed to load profile");
+        const apiError = error.response?.data?.apiError;
+
+        console.error("Failed to load profile:", apiError?.message);
+        setErrors({
+          message: apiError?.message,
+        });
       } finally {
         setLoading(false);
       }
@@ -56,21 +57,28 @@ const EditProfile = () => {
     event.preventDefault();
 
     setSaving(true);
-    setError("");
+    setErrors(null);
 
     try {
       await userService.updateUser(formData);
 
       navigate("/profile");
     } catch (error) {
-      console.error(
-        "Failed to update profile:",
-        error.response?.data?.apiError?.message,
-      );
+      const apiError = error.response?.data?.apiError;
 
-      setError(
-        error.response?.data?.apiError?.message || "Failed to update profile",
-      );
+      const fieldError = {};
+
+      apiError?.subErrors?.forEach((errorMessage) => {
+        const [field, message] = errorMessage.split(": ");
+        fieldError[field] = message;
+      });
+      console.error("Failed to load profile:", apiError?.message);
+      // console.log("SubErrors:", apiError?.subErrors);
+      // console.log("FieldErrors:", fieldError);
+      setErrors({
+        message: apiError?.message,
+        ...fieldError,
+      });
     } finally {
       setSaving(false);
     }
@@ -95,9 +103,9 @@ const EditProfile = () => {
 
       {/* Form Card */}
       <div className="bg-white border rounded-2xl shadow-sm p-6">
-        {error && (
+        {errors && (
           <div className="mb-5 p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-            {error}
+            {errors?.message}
           </div>
         )}
 
@@ -149,6 +157,10 @@ const EditProfile = () => {
               className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
+
+            {errors?.fullName && (
+              <p className="mt-1 text-sm text-red-500">{errors.fullName}</p>
+            )}
           </div>
 
           {/* Username */}
@@ -171,6 +183,9 @@ const EditProfile = () => {
                 className="flex-1 border rounded-r-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+            {errors?.username && (
+              <p className="mt-1 text-sm text-red-500">{errors.username}</p>
+            )}
           </div>
 
           {/* Bio */}
@@ -194,6 +209,10 @@ const EditProfile = () => {
               placeholder="Tell people a little about yourself..."
               className="w-full border rounded-lg px-3 py-2 resize-none outline-none focus:ring-2 focus:ring-blue-500"
             />
+
+            {errors?.bio && (
+              <p className="mt-1 text-sm text-red-500">{errors.bio}</p>
+            )}
           </div>
 
           {/* Buttons */}

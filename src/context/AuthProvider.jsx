@@ -1,7 +1,6 @@
 import { createContext, useEffect, useState } from "react";
 import userService from "../services/userService";
 import authService from "../services/authService";
-import { useNavigate } from "react-router-dom";
 import websocketService from "../services/webSocketService";
 
 export const AuthContext = createContext();
@@ -25,6 +24,37 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    if (!accessToken) {
+      return;
+    }
+
+    const token = JSON.parse(atob(accessToken.split(".")[1]));
+
+    const expiryTime = token.exp * 1000;
+    const currentTime = Date.now();
+
+    // Refresh 1 minute before expiry
+    const refreshTime = expiryTime - currentTime - 60 * 1000;
+
+    if (refreshTime <= 0) {
+      console.log(
+        "Access token almost to expiry, calling refresh token function",
+      );
+      refreshToken();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      console.log(
+        "Access Token expire in 1 min, calling refresh token function from timeout",
+      );
+      refreshToken();
+    }, refreshTime);
+
+    return () => clearTimeout(timer);
+  }, [accessToken]);
+
+  useEffect(() => {
     const handleTokenUpdate = (event) => {
       setAccessToken(event.detail);
     };
@@ -43,13 +73,12 @@ const AuthProvider = ({ children }) => {
         success: true,
       };
     } catch (error) {
-      console.log(
-        "Error Signing up",
-        error.response?.data?.apiError?.message || error.message,
-      );
+      const apiError = error.response?.data?.apiError;
+
+      console.log("Error Signing up", apiError?.message || error.message);
       return {
         success: false,
-        message: error?.response?.data?.apiError?.message || "Error Signing up",
+        error: apiError || { message: "Error Signing up" },
       };
     }
   };
@@ -69,14 +98,15 @@ const AuthProvider = ({ children }) => {
         success: true,
       };
     } catch (error) {
+      const apiError = error.response?.data?.apiError;
+
       console.log(
         "error while logging in : ",
-        error.response?.data?.apiError?.message || error.message,
+        apiError?.message || error.message,
       );
       return {
         success: false,
-        message:
-          error?.response?.data?.apiError?.message || "Something went wrong",
+        error: apiError || { message: "Something went wrong" },
       };
     }
   };
@@ -87,9 +117,11 @@ const AuthProvider = ({ children }) => {
       setAuthUser(res.data.data);
       console.log("Check Auth res : ", res);
     } catch (error) {
+      const apiError = error.response?.data?.apiError;
+
       console.log(
         "error checking Auth user : ",
-        error.response?.data?.apiError?.message || error.message,
+        apiError?.message || error.message,
       );
 
       setAuthUser(null);
@@ -112,14 +144,14 @@ const AuthProvider = ({ children }) => {
         data: res.data.data,
       };
     } catch (error) {
+      const apiError = error.response?.data?.apiError;
+
       console.log("Error updating refresh token");
       console.log("");
       return {
         success: false,
-        message:
-          error.data?.message ||
-          error.message ||
-          "Error updating refresh token",
+        error: apiError ||
+          error.message || { message: "Error updating refresh token" },
       };
     }
   };

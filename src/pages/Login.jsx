@@ -6,18 +6,36 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  const [errors, setErrors] = useState(null);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setErrors(null);
+
     const res = await login({ email, password });
-    console.log("Login Result", res.data);
+    console.log("Login Result", res);
 
     if (res.success) {
       navigate("/home");
+      return;
     }
+    console.log("Error:", res.error);
+
+    const fieldErrors = {};
+
+    res.error?.subErrors?.forEach((errorMessage) => {
+      const [field, message] = errorMessage.split(": ");
+      fieldErrors[field] = message;
+    });
+
+    setErrors({
+      message: res.error?.message,
+      ...fieldErrors,
+    });
   };
 
   return (
@@ -27,6 +45,10 @@ const Login = () => {
           <h1 className="text-3xl font-bold text-blue-600">GeoChat</h1>
           <p className="mt-2 text-gray-500">Login to your account</p>
         </div>
+
+        {errors && (
+          <p className="mb-4 text-center text-red-500">{errors.message}</p>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -41,6 +63,9 @@ const Login = () => {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             />
+            {errors?.email && (
+              <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+            )}
           </div>
 
           <div>
@@ -55,6 +80,9 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             />
+            {errors?.password && (
+              <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+            )}
           </div>
 
           <button
